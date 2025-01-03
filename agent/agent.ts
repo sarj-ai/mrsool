@@ -11,6 +11,7 @@ import {
 } from "@livekit/agents";
 import * as openai from "@livekit/agents-plugin-openai";
 import dotenv from "dotenv";
+import { RoomEvent } from "livekit-client";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
@@ -79,9 +80,25 @@ export default defineAgent({
       console.log("Agent started speaking.");
     });
 
+    ctx.room.on(RoomEvent.DataReceived, (payload, participant, kind) => {
+      console.log("Received message:", new TextDecoder().decode(payload));
+      console.log("From participant:", participant?.identity);
+      console.log("Message type:", kind); // reliable/unreliable
+    });
+
     const session = await agent
       .start(ctx.room, participant)
       .then((session) => session as openai.realtime.RealtimeSession);
+
+    // session.chatCtx.send(
+    //   new TextEncoder().encode(
+    //     JSON.stringify({
+    //       action: "doSomething",
+    //       payload: { key: "value" },
+    //     })
+    //   ),
+    //   { topic: "chat" }
+    // );
 
     session.conversation.item.create(
       llm.ChatMessage.create({

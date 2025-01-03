@@ -9,23 +9,35 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@livekit/agents": "^0.6.0",
+    "@livekit/agents-plugin-openai": "^0.7.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.5",
     "lucide-react": "^0.469.0",
     "next": "^15",
     "react": "^19",
     "react-dom": "^19",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.15.0",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.16",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

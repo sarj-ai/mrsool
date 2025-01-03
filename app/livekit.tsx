@@ -2,8 +2,9 @@
 import "@livekit/components-styles";
 
 import { Button } from "@/components/ui/button";
-import { AudioConference, LiveKitRoom } from "@livekit/components-react";
+import { LiveKitRoom } from "@livekit/components-react";
 import { useState } from "react";
+import Room from "./room";
 
 export default function LiveKit({ token }: { token: string }) {
   const [isWaiting, setIsWaiting] = useState(true);
@@ -40,7 +41,7 @@ export default function LiveKit({ token }: { token: string }) {
         setIsWaiting(true);
       }}
     >
-      <AudioConference />
+      <Room />
     </LiveKitRoom>
   );
 }

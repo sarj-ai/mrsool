@@ -27,26 +27,48 @@ export default defineAgent({
     console.log(`starting assistant example agent for ${participant.identity}`);
 
     const model = new openai.realtime.RealtimeModel({
-      instructions:
-        "You are an unhelpful assistant. You only make jokes and take nothing seriously.",
+      instructions: "You are an helpful assistant.",
     });
 
+    // const fncCtx: llm.FunctionContext = {
+    //   weather: {
+    //     description: "Get the weather in a location",
+    //     parameters: z.object({
+    //       location: z.string().describe("The location to get the weather for"),
+    //     }),
+    //     execute: async ({ location }) => {
+    //       console.debug(`executing weather function for ${location}`);
+    //       const response = await fetch(
+    //         `https://wttr.in/${location}?format=%C+%t`
+    //       );
+    //       if (!response.ok) {
+    //         throw new Error(`Weather API returned status: ${response.status}`);
+    //       }
+    //       const weather = await response.text();
+    //       return `The weather in ${location} right now is ${weather}.`;
+    //     },
+    //   },
+    // };
+
     const fncCtx: llm.FunctionContext = {
-      weather: {
-        description: "Get the weather in a location",
+      getUserLocation: {
+        description: "Retrieve the user's current geolocation as lat/lng.",
         parameters: z.object({
-          location: z.string().describe("The location to get the weather for"),
+          highAccuracy: z
+            .boolean()
+            .describe("Whether to use high accuracy mode, which is slower"),
         }),
-        execute: async ({ location }) => {
-          console.debug(`executing weather function for ${location}`);
-          const response = await fetch(
-            `https://wttr.in/${location}?format=%C+%t`
-          );
-          if (!response.ok) {
-            throw new Error(`Weather API returned status: ${response.status}`);
+        execute: async (params) => {
+          try {
+            return await ctx.room.localParticipant!.performRpc({
+              destinationIdentity: participant.identity,
+              method: "getUserLocation",
+              payload: JSON.stringify(params),
+              responseTimeout: params.highAccuracy ? 10000 : 5000,
+            });
+          } catch (error) {
+            return "Unable to retrieve user location";
           }
-          const weather = await response.text();
-          return `The weather in ${location} right now is ${weather}.`;
         },
       },
     };

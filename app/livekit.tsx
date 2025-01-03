@@ -1,8 +1,8 @@
 "use client";
+import "@livekit/components-styles";
 
 import { Button } from "@/components/ui/button";
 import { AudioConference, LiveKitRoom } from "@livekit/components-react";
-import "@livekit/components-styles";
 import { useState } from "react";
 
 export default function LiveKit({ token }: { token: string }) {
@@ -31,10 +31,14 @@ export default function LiveKit({ token }: { token: string }) {
 
   return (
     <LiveKitRoom
+      data-lk-theme="default"
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-      video={true}
+      video={false}
       audio={true}
+      onDisconnected={() => {
+        setIsWaiting(true);
+      }}
     >
       <AudioConference />
     </LiveKitRoom>

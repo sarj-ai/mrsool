@@ -2,6 +2,7 @@
   "name": "livekit-agent",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -22,6 +23,7 @@
     "livekit-server-sdk": "^2.9.4",
     "lucide-react": "^0.469.0",
     "next": "^15",
+    "pdf-text-reader": "^5.1.0",
     "react": "^19",
     "react-dom": "^19",
     "tailwind-merge": "^2.6.0",

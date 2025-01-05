@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   BarVisualizer,
-  Chat,
   RoomAudioRenderer,
   useDataChannel,
   useLocalParticipant,
@@ -26,6 +25,7 @@ import { useEffect, useState } from "react";
 export default function Room() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [documentUrl, setDocumentUrl] = useState("");
+  const [urlInput, setUrlInput] = useState("");
   const [rpcResolver, setRpcResolver] = useState<
     ((value: string) => void) | null
   >(null);
@@ -90,23 +90,33 @@ export default function Room() {
       </div>
       <VoiceAssistantControlBar />
       <RoomAudioRenderer />
-      <Chat />
-      <Button
-        onClick={() => {
-          console.log("sending message");
-          send(
-            new TextEncoder().encode(
-              JSON.stringify({
-                action: "doSomething",
-                payload: { key: "value" },
-              })
-            ),
-            { topic: "file" }
-          );
-        }}
-      >
-        Send
-      </Button>
+      <div className="flex gap-2 p-4">
+        <Input
+          type="text"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          placeholder="Enter URL to analyze..."
+          className="flex-1"
+        />
+        <Button
+          onClick={() => {
+            if (urlInput.trim()) {
+              send(
+                new TextEncoder().encode(
+                  JSON.stringify({
+                    action: "analyzeUrl",
+                    payload: { url: urlInput.trim() },
+                  })
+                ),
+                { topic: "file" }
+              );
+              setUrlInput("");
+            }
+          }}
+        >
+          Analyze URL
+        </Button>
+      </div>
 
       <Dialog
         open={isDialogOpen}

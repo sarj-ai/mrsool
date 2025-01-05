@@ -15,12 +15,18 @@ import { RoomEvent } from "livekit-client";
 import { RoomServiceClient } from "livekit-server-sdk";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import OpenAI from "openai";
 import { readPdfText } from "pdf-text-reader";
 import { z } from "zod";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(__dirname, "../.env.local");
 dotenv.config({ path: envPath });
+
+// Initialize OpenAI client
+const openaiClient = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export default defineAgent({
   entry: async (ctx: JobContext) => {
@@ -56,32 +62,109 @@ export default defineAgent({
     });
 
     async function indexDocument(text: string) {
-      await new Promise((resolve) => setTimeout(resolve, 10000));
+      // Function to split text into chunks of roughly equal size
+      function splitIntoChunks(
+        text: string,
+        chunkSize: number = 1000
+      ): string[] {
+        const chunks: string[] = [];
+        const sentences = text.split(/[.!?]+/);
+        let currentChunk = "";
 
-      // // tell the user indexing has started
-      // // Create a chat message in the conversation
-      session.conversation.item.create(
-        llm.ChatMessage.create({
-          role: llm.ChatRole.ASSISTANT,
-          text: `Good news! I've indexed the document. I'm ready to discuss it with you!`,
-        })
-      );
+        for (const sentence of sentences) {
+          const trimmedSentence = sentence.trim();
+          if (!trimmedSentence) continue;
 
-      // Generate a response\
-      session.response.create();
+          if (
+            (currentChunk + trimmedSentence).length > chunkSize &&
+            currentChunk.length > 0
+          ) {
+            chunks.push(currentChunk.trim());
+            currentChunk = trimmedSentence;
+          } else {
+            currentChunk += (currentChunk ? " " : "") + trimmedSentence;
+          }
+        }
 
-      // here we will do a long running indexing process
-      // start index function
+        if (currentChunk) {
+          chunks.push(currentChunk.trim());
+        }
 
-      console.log(`Indexing document at ${text}`);
+        return chunks;
+      }
+
+      try {
+        console.log("Starting document indexing process");
+
+        // Split the text into chunks
+        const chunks = splitIntoChunks(text);
+        console.log("Created chunks", chunks.length);
+
+        // Generate embeddings for each chunk
+        const embeddingsWithText: Array<{ text: string; embedding: number[] }> =
+          [];
+
+        for (const chunk of chunks) {
+          const response = await openaiClient.embeddings.create({
+            model: "text-embedding-3-small",
+            input: chunk,
+            encoding_format: "float",
+          });
+
+          embeddingsWithText.push({
+            text: chunk,
+            embedding: response.data[0].embedding,
+          });
+
+          console.log(
+            "Generated embedding for chunk",
+            chunk.substring(0, 50) + "..."
+          );
+        }
+
+        console.log(
+          "Completed embedding generation",
+
+          embeddingsWithText.length
+        );
+
+        // tell the user indexing has completed
+        session.conversation.item.create(
+          llm.ChatMessage.create({
+            role: llm.ChatRole.ASSISTANT,
+            text: `I've successfully processed and indexed the document. I've created ${chunks.length} chunks and generated their embeddings. I'm ready to discuss the content with you!`,
+          })
+        );
+
+        // Generate a response
+        session.response.create();
+
+        return embeddingsWithText;
+      } catch (error) {
+        console.error("Error during document indexing:", error);
+
+        session.conversation.item.create(
+          llm.ChatMessage.create({
+            role: llm.ChatRole.ASSISTANT,
+            text: `I encountered an error while trying to index the document. Please try again or contact support if the issue persists.`,
+          })
+        );
+
+        session.response.create();
+        throw error;
+      }
     }
 
     const fncCtx: llm.FunctionContext = {
       search: {
         description:
-          "This function will use AI to search a document. The query parameter should be a 'Human readable search sentence'",
+          "This function will use AI (RAG) to search a document. The query parameter should be a 'Human readable search sentence'",
         parameters: z.object({
-          query: z.string().describe("A Human readable search sentence"),
+          query: z
+            .string()
+            .describe(
+              "A Human readable search sentence. It should be perfect for RAG!"
+            ),
         }),
         execute: async ({ query }) => {
           console.log(`Searching for "${query}" in the document`);

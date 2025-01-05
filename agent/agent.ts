@@ -42,14 +42,16 @@ export default defineAgent({
     });
 
     const model = new openai.realtime.RealtimeModel({
+      model: "gpt-4o-realtime-preview-2024-12-17",
       instructions: `You are an helpful assistant. You can do two different things. 
       You can tell the user the weather when they ask (use weather function) AND
       If the user want to dicsuss a document, he/she will add it via a separate form and the server will then index it. 
 
-      After the server has index it, you can use the search() function to request parts of the document
+      After the server has index it, you can use the search() function to request parts of the document.
+
+      Please keep your intro short and concise.
       `,
-      //@ts-expect-error inf is valid
-      maxResponseOutputTokens: "inf",
+      maxResponseOutputTokens: 4096,
       temperature: 0.6,
     });
 
@@ -75,113 +77,6 @@ export default defineAgent({
     }
 
     const fncCtx: llm.FunctionContext = {
-      //       openDocumentPopup: {
-      //         description: `Open a document popup on the user's screen. The screen has a textfield where the user
-      // can past a URL that contrains document you (the assistant) will later discuss with the user.
-
-      // The function will return a JSON object with the following fields:
-      // - success: boolean - whether the document was successfully opened
-      // - message: string - a message to the user (you as assistant should way that in your words to the user!)
-      // - documentText: string - the text of the document
-
-      // `,
-      //         parameters: z.object({}),
-      //         execute: async () => {
-      //           console.log("Opening document popup on the users screen");
-
-      //           // session.conversation.item.create(
-      //           llm.ChatMessage.create({
-      //             role: llm.ChatRole.ASSISTANT,
-      //             text: "I have opened a document popup on the users screen. Please paste the URL of the document you want to discuss with the user.",
-      //           });
-      //           session.response.create();
-
-      //           try {
-      //             const urlText = await ctx.room.localParticipant!.performRpc({
-      //               destinationIdentity: participant.identity,
-      //               method: "openDocumentPopup",
-      //               payload: JSON.stringify({}),
-      //               responseTimeout: 10000, //we can wait up to 1 min get a response form the user
-      //             });
-
-      //             if (!urlText) {
-      //               return JSON.stringify({
-      //                 success: false,
-      //                 message:
-      //                   "No URL was provided. Please try again and paste a valid document URL.",
-      //                 documentText: "",
-      //               });
-      //             }
-
-      //             console.log("User entered URL:", urlText);
-
-      //             try {
-      //               const url = new URL(urlText);
-
-      //               let extension = "";
-      //               if (url.pathname.endsWith(".txt")) {
-      //                 extension = ".txt";
-      //               } else if (url.pathname.endsWith(".pdf")) {
-      //                 extension = ".pdf";
-      //               }
-
-      //               if (!extension) {
-      //                 return JSON.stringify({
-      //                   success: false,
-      //                   message:
-      //                     "Only .txt and .pdf files are currently supported. Please provide a URL to a .txt or .pdf file.",
-      //                   documentText: "",
-      //                 });
-      //               }
-
-      //               let text = "";
-      //               if (extension === ".pdf") {
-      //                 text = await readPdfText({ url: url.toString() });
-      //               } else {
-      //                 const response = await fetch(url);
-      //                 if (!response.ok) {
-      //                   return JSON.stringify({
-      //                     success: false,
-      //                     message: `Unable to fetch the document. Please check if the URL is accessible and try again.`,
-      //                     documentText: "",
-      //                   });
-      //                 }
-      //                 text = await response.text();
-      //               }
-
-      //               console.log(
-      //                 "Successfully downloaded and processed document",
-      //                 text.replace(/\n/g, " ").substring(0, 10000)
-      //               );
-
-      //               return JSON.stringify({
-      //                 success: true,
-      //                 message:
-      //                   "I've successfully loaded the document and am ready to discuss it with you.",
-      //                 documentText: text.replace(/\n/g, " "),
-      //               });
-      //             } catch (error) {
-      //               console.error("Error fetching document:", error);
-      //               console.log("User entered invalid URL:", urlText);
-      //               return JSON.stringify({
-      //                 success: false,
-      //                 message:
-      //                   "The URL provided appears to be invalid. Please provide a valid URL to a .txt file.",
-      //                 documentText: "",
-      //               });
-      //             }
-      //           } catch (error) {
-      //             console.error("Error opening document popup:", error);
-      //             return JSON.stringify({
-      //               success: false,
-      //               message:
-      //                 "Something went wrong while processing your request. Please try again.",
-      //               documentText: "",
-      //             });
-      //           }
-      //         },
-      //       },
-
       search: {
         description:
           "This function will use AI to search a document. The query parameter should be a 'Human readable search sentence'",
@@ -329,98 +224,6 @@ export default defineAgent({
         session.response.create();
 
         return;
-
-        // analyze the URL
-        try {
-          const urlText = data.payload.url;
-
-          if (!urlText) {
-            session.conversation.item.create(
-              llm.ChatMessage.create({
-                role: llm.ChatRole.ASSISTANT,
-                text: "Tell the user: No URL was provided. Please try again and paste a valid document URL.",
-              })
-            );
-            session.response.create();
-            return;
-          }
-
-          console.log("User entered URL:", urlText);
-
-          try {
-            const url = new URL(urlText);
-
-            let extension = "";
-            if (url.pathname.endsWith(".txt")) {
-              extension = ".txt";
-            } else if (url.pathname.endsWith(".pdf")) {
-              extension = ".pdf";
-            }
-
-            if (!extension) {
-              session.conversation.item.create(
-                llm.ChatMessage.create({
-                  role: llm.ChatRole.ASSISTANT,
-                  text: "Tell the user: Only .txt and .pdf files are currently supported. Please provide a URL to a .txt or .pdf file.",
-                })
-              );
-              session.response.create();
-              return;
-            }
-
-            let text = "";
-            if (extension === ".pdf") {
-              text = await readPdfText({ url: url.toString() });
-            } else {
-              const response = await fetch(url);
-              if (!response.ok) {
-                session.conversation.item.create(
-                  llm.ChatMessage.create({
-                    role: llm.ChatRole.ASSISTANT,
-                    text: "Tell the user: Unable to fetch the document. Please check if the URL is accessible and try again.",
-                  })
-                );
-                session.response.create();
-                return;
-              }
-              text = await response.text();
-            }
-
-            console.log(
-              "Successfully downloaded and processed document",
-              text.replace(/\n/g, " ").substring(0, 10000)
-            );
-            session.conversation.item.create(
-              llm.ChatMessage.create({
-                role: llm.ChatRole.ASSISTANT,
-                text: "Tell the user: Thanks for providing the document. I will now index it and be ready to discuss it with you. I'll let you know when I'm done!",
-              })
-            );
-            session.response.create();
-            return;
-          } catch (error) {
-            console.error("Error fetching document:", error);
-            console.log("User entered invalid URL:", urlText);
-            session.conversation.item.create(
-              llm.ChatMessage.create({
-                role: llm.ChatRole.ASSISTANT,
-                text: "Tell the user: The URL provided appears to be invalid. Please provide a valid URL to a .txt file.",
-              })
-            );
-            session.response.create();
-            return;
-          }
-        } catch (error) {
-          console.error("Error opening document popup:", error);
-          session.conversation.item.create(
-            llm.ChatMessage.create({
-              role: llm.ChatRole.ASSISTANT,
-              text: "Tell the user: Something went wrong while processing your request. Please try again.",
-            })
-          );
-          session.response.create();
-          return;
-        }
       }
 
       console.log("Received message:", new TextDecoder().decode(payload));

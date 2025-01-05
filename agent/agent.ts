@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { vector } from "@electric-sql/pglite/vector";
 import {
   type JobContext,
   WorkerOptions,
@@ -19,6 +20,12 @@ import OpenAI from "openai";
 import { readPdfText } from "pdf-text-reader";
 import { z } from "zod";
 
+import { PGlite } from "@electric-sql/pglite";
+
+const db = new PGlite({
+  extensions: { vector },
+});
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(__dirname, "../.env.local");
 dotenv.config({ path: envPath });
@@ -30,6 +37,21 @@ const openaiClient = new OpenAI({
 
 export default defineAgent({
   entry: async (ctx: JobContext) => {
+    // init the DB
+    await db.exec("CREATE EXTENSION IF NOT EXISTS vector;");
+
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS documents (
+        id bigint primary key generated always as identity,
+        text TEXT,
+        embedding vector(1536)
+      );
+    `);
+
+    await db.exec(`
+      create index on documents using hnsw (embedding vector_ip_ops);
+    `);
+
     await ctx.connect();
     console.log("waiting for participant");
     const participant = await ctx.waitForParticipant();
@@ -124,15 +146,24 @@ export default defineAgent({
 
         console.log(
           "Completed embedding generation",
-
           embeddingsWithText.length
         );
+
+        // Insert embeddings into the database
+        for (const item of embeddingsWithText) {
+          console.log("Storing embedding with length:", item.embedding.length);
+          await db.query(
+            `INSERT INTO documents (text, embedding) VALUES ($1, $2) RETURNING id`,
+            [item.text, JSON.stringify(item.embedding)]
+          );
+        }
+        console.log("Successfully stored all embeddings in the database");
 
         // tell the user indexing has completed
         session.conversation.item.create(
           llm.ChatMessage.create({
             role: llm.ChatRole.ASSISTANT,
-            text: `I've successfully processed and indexed the document. I've created ${chunks.length} chunks and generated their embeddings. I'm ready to discuss the content with you!`,
+            text: `SAY: "Done indexing"`,
           })
         );
 
@@ -169,10 +200,38 @@ export default defineAgent({
         execute: async ({ query }) => {
           console.log(`Searching for "${query}" in the document`);
 
-          return JSON.stringify([
-            "this is some cool soupoe",
-            "he as old and bold",
-          ]);
+          // Generate embedding for the query
+          const queryEmbedding = await openaiClient.embeddings.create({
+            model: "text-embedding-3-small",
+            input: query,
+            encoding_format: "float",
+          });
+
+          console.log(
+            "Search query embedding length:",
+            queryEmbedding.data[0].embedding.length
+          );
+
+          // Let's check what's in the database first
+          const countResult = await db.query<{ count: number }>(
+            "SELECT COUNT(*) as count FROM documents"
+          );
+          console.log(
+            "Total documents in database:",
+            countResult.rows[0].count
+          );
+
+          const res = await db.query<{ text: string }>(
+            `
+            select text from documents
+            order by embedding <=> $1
+            limit 10;
+            `,
+            [JSON.stringify(queryEmbedding.data[0].embedding)]
+          );
+
+          console.log("Results:", res.rows);
+          return JSON.stringify(res.rows.map((row) => row.text));
         },
       },
 
@@ -239,8 +298,7 @@ export default defineAgent({
               void indexDocument(text);
               return JSON.stringify({
                 success: true,
-                message:
-                  "I've got the document. I'll index it for you! When I'm done indexing. I'll let you know!",
+                message: `SAY: "indexing now"`,
               });
             } catch (error) {
               console.error("Error fetching document:", error);

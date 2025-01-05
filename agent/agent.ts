@@ -36,20 +36,16 @@ export default defineAgent({
     const fncCtx: llm.FunctionContext = {
       openDocumentPopup: {
         description: `Open a document popup on the user's screen. The screen has a textfield where the user 
-can past a URL that contrains document you (the assistant) will later discuss with the user`,
+can past a URL that contrains document you (the assistant) will later discuss with the user.
+
+The function will return a JSON object with the following fields:
+- success: boolean - whether the document was successfully opened
+- message: string - a message to the user (you as assistant should way that in your words to the user!)
+- documentText: string - the text of the document
+
+`,
         parameters: z.object({}),
         execute: async () => {
-          // Inform the user you will open a document for them
-          session.conversation.item.create(
-            llm.ChatMessage.create({
-              role: llm.ChatRole.ASSISTANT,
-              text: `I'm opening a popup for you. Please paste the document URL into it.`,
-            })
-          );
-
-          // Add a delay before opening the popup to allow the message to be displayed
-          // await new Promise((resolve) => setTimeout(resolve, 5000));
-
           console.log("Opening document popup on the users screen");
           try {
             const urlText = await ctx.room.localParticipant!.performRpc({
@@ -60,14 +56,65 @@ can past a URL that contrains document you (the assistant) will later discuss wi
             });
 
             if (!urlText) {
-              return "The users did'not provide a URL";
+              return JSON.stringify({
+                success: false,
+                message:
+                  "No URL was provided. Please try again and paste a valid document URL.",
+                documentText: "",
+              });
             }
 
             console.log("User entered URL:", urlText);
 
-            return urlText;
-          } catch {
-            return `Something went wrong`;
+            try {
+              const url = new URL(urlText);
+              console.log("User entered valid URL:", url);
+
+              if (!url.pathname.endsWith(".txt")) {
+                return JSON.stringify({
+                  success: false,
+                  message:
+                    "Only .txt files are currently supported. Please provide a URL to a .txt file.",
+                  documentText: "",
+                });
+              }
+
+              const response = await fetch(url);
+              if (!response.ok) {
+                return JSON.stringify({
+                  success: false,
+                  message: `Unable to fetch the document. Please check if the URL is accessible and try again.`,
+                  documentText: "",
+                });
+              }
+
+              const text = await response.text();
+              console.log("Successfully downloaded document text");
+
+              return JSON.stringify({
+                success: true,
+                message:
+                  "I've successfully loaded the document and am ready to discuss it with you.",
+                documentText: text,
+              });
+            } catch (error) {
+              console.error("Error fetching document:", error);
+              console.log("User entered invalid URL:", urlText);
+              return JSON.stringify({
+                success: false,
+                message:
+                  "The URL provided appears to be invalid. Please provide a valid URL to a .txt file.",
+                documentText: "",
+              });
+            }
+          } catch (error) {
+            console.error("Error opening document popup:", error);
+            return JSON.stringify({
+              success: false,
+              message:
+                "Something went wrong while processing your request. Please try again.",
+              documentText: "",
+            });
           }
         },
       },

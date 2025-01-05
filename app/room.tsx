@@ -3,6 +3,15 @@ import "@livekit/components-styles";
 
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
   BarVisualizer,
   Chat,
   RoomAudioRenderer,
@@ -11,7 +20,6 @@ import {
   useVoiceAssistant,
   VoiceAssistantControlBar,
 } from "@livekit/components-react";
-import * as Dialog from "@radix-ui/react-dialog";
 import { RpcError, RpcInvocationData } from "livekit-client";
 import { useEffect, useState } from "react";
 
@@ -100,7 +108,7 @@ export default function Room() {
         Send
       </Button>
 
-      <Dialog.Root
+      <Dialog
         open={isDialogOpen}
         onOpenChange={(open: boolean) => {
           if (!open && rpcResolver) {
@@ -111,35 +119,31 @@ export default function Room() {
           setDocumentUrl("");
         }}
       >
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-[400px] space-y-4">
-            <Dialog.Title className="text-lg font-semibold">
-              Enter Document URL
-            </Dialog.Title>
-            <Dialog.Description className="text-sm text-gray-500">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enter Document URL</DialogTitle>
+            <DialogDescription>
               Please enter the document URL you want to analyze
-            </Dialog.Description>
-            <input
-              type="text"
-              value={documentUrl}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setDocumentUrl(e.target.value)
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="text"
+            value={documentUrl}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setDocumentUrl(e.target.value)
+            }
+            placeholder="https://..."
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
+                handleSubmitUrl();
               }
-              placeholder="https://..."
-              className="w-full px-3 py-2 border rounded-md text-gray-900 placeholder:text-gray-400"
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === "Enter") {
-                  handleSubmitUrl();
-                }
-              }}
-            />
-            <div className="flex justify-end gap-2">
-              <Button onClick={handleSubmitUrl}>Submit</Button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+            }}
+          />
+          <DialogFooter>
+            <Button onClick={handleSubmitUrl}>Submit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

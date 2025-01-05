@@ -317,8 +317,6 @@ export default defineAgent({
                 "Something went wrong while processing your request. Please try again.",
             });
           }
-
-          return JSON.stringify({ success: true, message: "Document indexed" });
         },
       },
 
@@ -375,23 +373,6 @@ export default defineAgent({
     const session = await agent
       .start(ctx.room, participant)
       .then((session) => session as openai.realtime.RealtimeSession);
-
-    // session.chatCtx.send(
-    //   new TextEncoder().encode(
-    //     JSON.stringify({
-    //       action: "doSomething",
-    //       payload: { key: "value" },
-    //     })
-    //   ),
-    //   { topic: "chat" }
-    // );
-
-    // session.conversation.item.create(
-    //   llm.ChatMessage.create({
-    //     role: llm.ChatRole.ASSISTANT,
-    //     text: 'Say "How can I help you today you cool guy?"',
-    //   })
-    // );
 
     session.response.create();
   },

@@ -16,7 +16,7 @@ export async function getParticipantToken() {
   });
 
   at.addGrant({
-    room: "my-room",
+    room: `my-room-3`,
     roomJoin: true,
     canPublish: true,
     canSubscribe: true,

@@ -4,7 +4,7 @@ import LiveKit from "./livekit";
 
 export default async function Home() {
   const token = await getParticipantToken();
-
+  console.log("token", token);
   if (!token) {
     return <div>Loading...</div>;
   }

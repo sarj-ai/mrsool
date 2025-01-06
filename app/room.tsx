@@ -91,6 +91,14 @@ function FileUploadForm({ onSuccess }: { onSuccess: () => void }) {
       if (acceptedFiles.length === 0) return;
 
       const file = acceptedFiles[0];
+
+      // Validate file type
+      const allowedTypes = ["application/pdf", "text/plain"];
+      if (!allowedTypes.includes(file.type)) {
+        setUploadError("Only PDF and TXT files are allowed");
+        return;
+      }
+
       setIsUploading(true);
       setUploadError(null);
 

@@ -23,7 +23,6 @@ import { z } from "zod";
 import { translations } from "@/lib/translations";
 import { Language } from "@/lib/types";
 import { PGlite } from "@electric-sql/pglite";
-import { RoomServiceClient } from "livekit-server-sdk";
 
 const db = new PGlite({
   extensions: { vector },
@@ -84,12 +83,12 @@ export default defineAgent({
     ctx.addShutdownCallback(async () => {
       console.log("shutting down agent");
 
-      const roomServiceClient = new RoomServiceClient(
-        process.env.LIVEKIT_URL!,
-        process.env.LIVEKIT_API_KEY!,
-        process.env.LIVEKIT_API_SECRET!
-      );
-      await roomServiceClient.deleteRoom(ctx.job.room!.name);
+      // const roomServiceClient = new RoomServiceClient(
+      //   process.env.LIVEKIT_URL!,
+      //   process.env.LIVEKIT_API_KEY!,
+      //   process.env.LIVEKIT_API_SECRET!
+      // );
+      // await roomServiceClient.deleteRoom(ctx.job.room!.name);
     });
 
     async function analyzeDocument(text: string) {

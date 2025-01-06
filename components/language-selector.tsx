@@ -5,16 +5,20 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { useLanguage } from "@/lib/language-context";
 import { Language } from "@/lib/types";
-import { Globe } from "lucide-react";
 
 const languageNames: Record<Language, string> = {
   en: "English",
   de: "Deutsch",
   ar: "العربية",
+};
+
+const languageFlags: Record<Language, string> = {
+  en: "🇬🇧",
+  de: "🇩🇪",
+  ar: "🇸🇦",
 };
 
 export function LanguageSelector() {
@@ -26,13 +30,20 @@ export function LanguageSelector() {
       onValueChange={(value: Language) => setLanguage(value)}
     >
       <SelectTrigger className="w-[140px] fixed top-4 right-4">
-        <Globe className="mr-2 h-4 w-4" />
-        <SelectValue placeholder="Select language" />
+        <span className="flex items-center gap-2">
+          {languageFlags[language]}
+          <span>{languageNames[language]}</span>
+        </span>
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="en">{languageNames.en}</SelectItem>
-        <SelectItem value="de">{languageNames.de}</SelectItem>
-        <SelectItem value="ar">{languageNames.ar}</SelectItem>
+        {Object.entries(languageNames).map(([code, name]) => (
+          <SelectItem key={code} value={code}>
+            <span className="flex items-center gap-2">
+              {languageFlags[code as Language]}
+              <span>{name}</span>
+            </span>
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

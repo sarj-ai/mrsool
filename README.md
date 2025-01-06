@@ -19,11 +19,12 @@ It uses two parts:
 - Start the local livekit agent via: `node --import=tsx agent/agent.ts dev`
 
 ## create a token for a user
+```
 lk token create \    
   --api-key <api-key> --api-secret <api-secret> \
   --join --room test_room --identity test_user \
   --valid-for 24h
-
+```
 
 
 ### Livekit Cloud

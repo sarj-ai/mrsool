@@ -21,9 +21,10 @@ export default function Room() {
   const { send } = useDataChannel("chat", (msg) =>
     console.log("message received", msg)
   );
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const lastTranscription = agentTranscriptions.at(-1);
+  const isRTL = language === "ar";
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
@@ -42,6 +43,7 @@ export default function Room() {
           onChange={(e) => setUrlInput(e.target.value)}
           placeholder={t("enterUrl")}
           className="flex-1"
+          dir={isRTL ? "rtl" : "ltr"}
         />
         <Button
           onClick={() => {
@@ -66,9 +68,11 @@ export default function Room() {
         <h3 className="font-semibold text-lg mb-4">{t("transcriptions")}</h3>
         {lastTranscription && (
           <div className="bg-gray-800/50 p-4 rounded-md">
-            <ReactMarkdown className="prose prose-invert">
-              {lastTranscription.text}
-            </ReactMarkdown>
+            <div dir={isRTL ? "rtl" : "ltr"}>
+              <ReactMarkdown className="prose prose-invert">
+                {lastTranscription.text}
+              </ReactMarkdown>
+            </div>
           </div>
         )}
       </div>

@@ -20,6 +20,7 @@ import OpenAI from "openai";
 import { readPdfText } from "pdf-text-reader";
 import { z } from "zod";
 
+import { translations } from "@/lib/translations";
 import { Language } from "@/lib/types";
 import { PGlite } from "@electric-sql/pglite";
 import { RoomServiceClient } from "livekit-server-sdk";
@@ -65,7 +66,7 @@ export default defineAgent({
 
     // extract the users language from the metadata
     let language: Language = "en";
-    const metadata = ctx.job.room?.metadata;
+    const metadata = ctx.job?.metadata;
     if (metadata) {
       try {
         const meta = JSON.parse(metadata) as {
@@ -171,7 +172,7 @@ export default defineAgent({
         session.conversation.item.create(
           llm.ChatMessage.create({
             role: llm.ChatRole.ASSISTANT,
-            text: `SAY: "Done analyzing"`,
+            text: `${translations[language].sayPrefix}${translations[language].doneAnalyzing}`,
           })
         );
 
@@ -258,8 +259,7 @@ export default defineAgent({
             if (!urlText) {
               return JSON.stringify({
                 success: false,
-                message:
-                  "No URL was provided. Please try again and paste a valid document URL.",
+                message: translations[language].noUrlProvided,
               });
             }
 
@@ -278,8 +278,7 @@ export default defineAgent({
               if (!extension) {
                 return JSON.stringify({
                   success: false,
-                  message:
-                    "Only .txt and .pdf files are currently supported. Please provide a URL to a .txt or .pdf file.",
+                  message: translations[language].unsupportedFileType,
                 });
               }
 
@@ -291,8 +290,7 @@ export default defineAgent({
                 if (!response.ok) {
                   return JSON.stringify({
                     success: false,
-                    message:
-                      "Unable to fetch the document. Please check if the URL is accessible and try again.",
+                    message: translations[language].errorFetchingDocument,
                   });
                 }
                 text = await response.text();
@@ -306,23 +304,21 @@ export default defineAgent({
               void analyzeDocument(text);
               return JSON.stringify({
                 success: true,
-                message: `SAY: "analyzing now"`,
+                message: `${translations[language].sayPrefix}${translations[language].analyzingNow}`,
               });
             } catch (error) {
               console.error("Error fetching document:", error);
               console.log("User entered invalid URL:", urlText);
               return JSON.stringify({
                 success: false,
-                message:
-                  "The URL provided appears to be invalid. Please provide a valid URL to a .txt file.",
+                message: translations[language].invalidUrl,
               });
             }
           } catch (error) {
             console.error("Error opening document popup:", error);
             return JSON.stringify({
               success: false,
-              message:
-                "Something went wrong while processing your request. Please try again.",
+              message: translations[language].generalError,
             });
           }
         },
@@ -335,8 +331,10 @@ export default defineAgent({
         }),
         execute: async ({ location }) => {
           console.debug(`executing weather function for ${location}`);
+
+          // TODO translate the location to english. This seem to work better
           const response = await fetch(
-            `https://wttr.in/${location}?format=%C+%t`
+            `https://wttr.in/${encodeURIComponent(location)}?format=%C+%t`
           );
           if (!response.ok) {
             throw new Error(`Weather API returned status: ${response.status}`);
@@ -349,14 +347,7 @@ export default defineAgent({
 
     const model = new openai.realtime.RealtimeModel({
       model: "gpt-4o-realtime-preview-2024-12-17",
-      instructions: `You are an helpful assistant. You can do two different things. 
-      You can tell the user the weather when they ask (use weather function) AND
-      If the user want to discuss a document, he/she will add it via a separate form and the server will then analyze it. 
-
-      After the server has analyzed it, you can use the search() function to request parts of the document.
-
-      Please keep your intro short and concise.
-      `,
+      instructions: translations[language].systemInstruction,
       maxResponseOutputTokens: Infinity,
       temperature: 0.6,
     });

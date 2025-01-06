@@ -1,9 +1,5 @@
 "use client";
-import "@livekit/components-styles";
-
 import { LanguageSelector } from "@/components/language-selector";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/lib/language-context";
 import {
   BarVisualizer,
@@ -12,7 +8,9 @@ import {
   useVoiceAssistant,
   VoiceAssistantControlBar,
 } from "@livekit/components-react";
-import { useState } from "react";
+import "@livekit/components-styles";
+import type { PutBlobResult } from "@vercel/blob";
+import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 export default function Room() {
@@ -36,33 +34,9 @@ export default function Room() {
         <VoiceAssistantControlBar />
       </div>
       <RoomAudioRenderer />
-      <div className="flex gap-2 mb-8">
-        <Input
-          type="text"
-          value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-          placeholder={t("enterUrl")}
-          className="flex-1"
-          dir={isRTL ? "rtl" : "ltr"}
-        />
-        <Button
-          onClick={() => {
-            if (urlInput.trim()) {
-              send(
-                new TextEncoder().encode(
-                  JSON.stringify({
-                    action: "analyzeUrl",
-                    payload: { url: urlInput.trim() },
-                  })
-                ),
-                { topic: "file" }
-              );
-              setUrlInput("");
-            }
-          }}
-        >
-          {t("analyzeUrl")}
-        </Button>
+
+      <div>
+        <AvatarUploadPage />
       </div>
       <div className="rounded-lg p-6">
         <h3 className="font-semibold text-lg mb-4">{t("transcriptions")}</h3>
@@ -77,5 +51,59 @@ export default function Room() {
         )}
       </div>
     </div>
+  );
+}
+
+function AvatarUploadPage() {
+  const { send } = useDataChannel("chat", (msg) =>
+    console.log("message received", msg)
+  );
+  const inputFileRef = useRef<HTMLInputElement>(null);
+  const [blob, setBlob] = useState<PutBlobResult | null>(null);
+  return (
+    <>
+      <h1>Upload Your Avatar</h1>
+
+      <form
+        onSubmit={async (event) => {
+          event.preventDefault();
+
+          if (!inputFileRef.current?.files) {
+            throw new Error("No file selected");
+          }
+
+          const file = inputFileRef.current.files[0];
+
+          const response = await fetch(`/api/upload?filename=${file.name}`, {
+            method: "POST",
+            body: file,
+          });
+
+          const newBlob = (await response.json()) as PutBlobResult;
+
+          console.log("newBlob", newBlob);
+
+          send(
+            new TextEncoder().encode(
+              JSON.stringify({
+                action: "analyzeUrl",
+                payload: { url: newBlob.url },
+              })
+            ),
+            { topic: "file" }
+          );
+
+          setBlob(newBlob);
+        }}
+      >
+        <input name="file" ref={inputFileRef} type="file" required />
+        <button type="submit">Upload</button>
+      </form>
+      {blob && (
+        <div>
+          Blob url: <a href={blob.url}>{blob.url}</a>
+        </div>
+      )}
+    </>
   );
 }

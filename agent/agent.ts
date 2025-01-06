@@ -394,6 +394,8 @@ cli.runApp(
     agent: fileURLToPath(import.meta.url),
     agentName: "doc-bot", // IMPORTANT: If you do set a name, the agent will not auto join any room! https://docs.livekit.io/agents/build/dispatch/
     workerType: JobType.JT_ROOM,
-    numIdleProcesses: 2,
+    numIdleProcesses: 4,
+    port: Number(process.env.PORT) || 8080, // this actually the health check port
+    host: "0.0.0.0",
   })
 );

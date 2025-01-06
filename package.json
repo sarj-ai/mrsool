@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node --import=tsx agent/agent.ts start",
     "lint": "next lint"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.15",
@@ -35,9 +38,7 @@
     "react-markdown": "^9.0.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
+    "zod": "^3.23.8",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.15.0",
     "@tailwindcss/typography": "^0.5.15",

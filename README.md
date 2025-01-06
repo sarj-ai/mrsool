@@ -1,9 +1,13 @@
 This is a example project for livekit-agents. Try it here: https://livekit-agent-nu.vercel.app/
 
 It can do the following:
-- [ ] Talk to the agent
-- [ ] Ask the agent about the weather
-- [ ] Ask the agent about a document (The agent will read the document on the server and RAG it)
+
+- [x] Uploade Files to the agent
+- [x] Change language (arabic, english, german)
+- [x] Deploy webserver to vercel
+- [x] Deploy agent to google cloud run
+- [x] Ask the agent about the weather
+- [x] Ask the agent about a document (The agent will read the document on the server and RAG it)
 
 
 It uses two parts:
@@ -35,3 +39,7 @@ Store the output in the .env file under `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRE
 
 5) Open the client in the browser and start talking to the agent. Usually the server runs on http://localhost:3000
 
+
+
+### Deploy agent to google cloud run
+1) run `gcloud run deploy livekit-agent --region us-west1 --source . --allow-unauthenticated --min-instances 1 --set-env-vars $(cat .env.local | tr '\n' ',' | sed 's/,$//')`

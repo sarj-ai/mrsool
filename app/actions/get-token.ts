@@ -1,5 +1,6 @@
 "use server";
 
+import { RoomAgentDispatch, RoomConfiguration } from "@livekit/protocol";
 import { AccessToken } from "livekit-server-sdk";
 
 export async function getParticipantToken() {
@@ -12,15 +13,22 @@ export async function getParticipantToken() {
 
   const at = new AccessToken(apiKey, apiSecret, {
     identity: String(Math.random()).slice(2), // Generate a random identity
-    ttl: 60 * 60 * 2, // 2 hours in seconds
   });
 
   at.addGrant({
-    room: `my-room-6`,
+    // room: `my-room-10`,
     roomJoin: true,
     canPublish: true,
     canSubscribe: true,
   });
 
-  return at.toJwt();
+  at.roomConfig = new RoomConfiguration({
+    agents: [
+      new RoomAgentDispatch({
+        agentName: "doc-bot",
+      }),
+    ],
+  });
+
+  return await at.toJwt();
 }

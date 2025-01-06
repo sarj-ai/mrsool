@@ -4,11 +4,13 @@ import "@livekit/components-styles";
 import { Button } from "@/components/ui/button";
 import { LiveKitRoom } from "@livekit/components-react";
 import { useState } from "react";
+import { closeRoom, getParticipantToken } from "./actions/get-token";
 import Room from "./room";
 
-export default function LiveKit({ token }: { token: string }) {
+export default function LiveKit() {
   const [isWaiting, setIsWaiting] = useState(true);
-
+  const [token, setToken] = useState("");
+  const [room, setRoom] = useState("");
   if (isWaiting) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -19,7 +21,11 @@ export default function LiveKit({ token }: { token: string }) {
           </p>
           <Button
             size="lg"
-            onClick={() => {
+            onClick={async () => {
+              const { token: newToken, room: newRoom } =
+                await getParticipantToken();
+              setToken(newToken);
+              setRoom(newRoom);
               setIsWaiting(false);
             }}
           >
@@ -37,8 +43,13 @@ export default function LiveKit({ token }: { token: string }) {
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       video={false}
       audio={true}
-      onDisconnected={() => {
+      onDisconnected={async () => {
+        setToken("");
+        setRoom("");
         setIsWaiting(true);
+
+        // close room
+        await closeRoom(room);
       }}
     >
       <Room />

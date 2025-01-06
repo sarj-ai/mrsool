@@ -1,7 +1,7 @@
 "use server";
 
 import { RoomAgentDispatch, RoomConfiguration } from "@livekit/protocol";
-import { AccessToken } from "livekit-server-sdk";
+import { AccessToken, RoomServiceClient } from "livekit-server-sdk";
 
 export async function getParticipantToken() {
   const apiKey = process.env.LIVEKIT_API_KEY;
@@ -15,8 +15,10 @@ export async function getParticipantToken() {
     identity: String(Math.random()).slice(2), // Generate a random identity
   });
 
+  const room = `my-room-${Math.random().toString(36).substring(2, 15)}`;
+
   at.addGrant({
-    // room: `my-room-10`,
+    room,
     roomJoin: true,
     canPublish: true,
     canSubscribe: true,
@@ -30,5 +32,14 @@ export async function getParticipantToken() {
     ],
   });
 
-  return await at.toJwt();
+  return { token: await at.toJwt(), room };
+}
+
+export async function closeRoom(room: string) {
+  const roomServiceClient = new RoomServiceClient(
+    process.env.LIVEKIT_URL!,
+    process.env.LIVEKIT_API_KEY!,
+    process.env.LIVEKIT_API_SECRET!
+  );
+  await roomServiceClient.deleteRoom(room);
 }

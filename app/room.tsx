@@ -24,11 +24,7 @@ import { useDropzone } from "react-dropzone";
 import ReactMarkdown from "react-markdown";
 
 export default function Room() {
-  const [urlInput, setUrlInput] = useState("");
   const { state, audioTrack, agentTranscriptions } = useVoiceAssistant();
-  const { send } = useDataChannel("chat", (msg) =>
-    console.log("message received", msg)
-  );
   const { t, language } = useLanguage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 

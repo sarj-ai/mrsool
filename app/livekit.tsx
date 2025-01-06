@@ -1,7 +1,9 @@
 "use client";
 import "@livekit/components-styles";
 
+import { LanguageSelector } from "@/components/language-selector";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/language-context";
 import { LiveKitRoom } from "@livekit/components-react";
 import { useState } from "react";
 import { closeRoom, getParticipantToken } from "./actions/get-token";
@@ -11,25 +13,28 @@ export default function LiveKit() {
   const [isWaiting, setIsWaiting] = useState(true);
   const [token, setToken] = useState("");
   const [room, setRoom] = useState("");
+  const { language, t } = useLanguage();
+
   if (isWaiting) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
+        <LanguageSelector />
         <div className="space-y-6 text-center">
-          <h1 className="text-3xl font-bold tracking-tighter">Join Meeting</h1>
-          <p className="text-muted-foreground">
-            Click below to join the video conference
-          </p>
+          <h1 className="text-3xl font-bold tracking-tighter">
+            {t("joinMeeting")}
+          </h1>
+          <p className="text-muted-foreground">{t("joinDescription")}</p>
           <Button
             size="lg"
             onClick={async () => {
               const { token: newToken, room: newRoom } =
-                await getParticipantToken("en");
+                await getParticipantToken(language);
               setToken(newToken);
               setRoom(newRoom);
               setIsWaiting(false);
             }}
           >
-            Join Now
+            {t("joinNow")}
           </Button>
         </div>
       </div>

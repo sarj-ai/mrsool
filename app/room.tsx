@@ -1,8 +1,10 @@
 "use client";
 import "@livekit/components-styles";
 
+import { LanguageSelector } from "@/components/language-selector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/lib/language-context";
 import {
   BarVisualizer,
   RoomAudioRenderer,
@@ -19,11 +21,13 @@ export default function Room() {
   const { send } = useDataChannel("chat", (msg) =>
     console.log("message received", msg)
   );
+  const { t } = useLanguage();
 
   const lastTranscription = agentTranscriptions.at(-1);
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
+      <LanguageSelector />
       <div className="h-80 mb-8">
         <BarVisualizer state={state} barCount={5} trackRef={audioTrack} />
       </div>
@@ -36,7 +40,7 @@ export default function Room() {
           type="text"
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
-          placeholder="Enter URL to analyze..."
+          placeholder={t("enterUrl")}
           className="flex-1"
         />
         <Button
@@ -55,11 +59,11 @@ export default function Room() {
             }
           }}
         >
-          Analyze URL
+          {t("analyzeUrl")}
         </Button>
       </div>
       <div className="rounded-lg p-6">
-        <h3 className="font-semibold text-lg mb-4">Transcriptions:</h3>
+        <h3 className="font-semibold text-lg mb-4">{t("transcriptions")}</h3>
         {lastTranscription && (
           <div className="bg-gray-800/50 p-4 rounded-md">
             <ReactMarkdown className="prose prose-invert">

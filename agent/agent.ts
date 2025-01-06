@@ -20,6 +20,7 @@ import OpenAI from "openai";
 import { readPdfText } from "pdf-text-reader";
 import { z } from "zod";
 
+import { Language } from "@/lib/types";
 import { PGlite } from "@electric-sql/pglite";
 import { RoomServiceClient } from "livekit-server-sdk";
 
@@ -61,6 +62,22 @@ export default defineAgent({
     console.log("waiting for participant");
     const participant = await ctx.waitForParticipant();
     console.log(`starting assistant example agent for ${participant.identity}`);
+
+    // extract the users language from the metadata
+    let language: Language = "en";
+    const metadata = ctx.job.room?.metadata;
+    if (metadata) {
+      try {
+        const meta = JSON.parse(metadata) as {
+          language: Language;
+        };
+        language = meta.language;
+      } catch (error) {
+        console.error("Error parsing metadata", error);
+      }
+    }
+
+    console.log("language", language);
 
     // when the agent is down. this should also close the room
     ctx.addShutdownCallback(async () => {
@@ -387,6 +404,6 @@ cli.runApp(
     agent: fileURLToPath(import.meta.url),
     agentName: "doc-bot", // IMPORTANT: If you do set a name, the agent will not auto join any room! https://docs.livekit.io/agents/build/dispatch/
     workerType: JobType.JT_ROOM,
-    numIdleProcesses: 10,
+    numIdleProcesses: 2,
   })
 );

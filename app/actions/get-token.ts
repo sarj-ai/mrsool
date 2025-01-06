@@ -1,9 +1,10 @@
 "use server";
 
+import { Language } from "@/lib/types";
 import { RoomAgentDispatch, RoomConfiguration } from "@livekit/protocol";
 import { AccessToken, RoomServiceClient } from "livekit-server-sdk";
 
-export async function getParticipantToken() {
+export async function getParticipantToken(language: Language) {
   const apiKey = process.env.LIVEKIT_API_KEY;
   const apiSecret = process.env.LIVEKIT_API_SECRET;
 
@@ -28,6 +29,9 @@ export async function getParticipantToken() {
     agents: [
       new RoomAgentDispatch({
         agentName: "doc-bot",
+        metadata: JSON.stringify({
+          language,
+        }),
       }),
     ],
   });

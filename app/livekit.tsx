@@ -23,7 +23,7 @@ export default function LiveKit() {
             size="lg"
             onClick={async () => {
               const { token: newToken, room: newRoom } =
-                await getParticipantToken();
+                await getParticipantToken("en");
               setToken(newToken);
               setRoom(newRoom);
               setIsWaiting(false);

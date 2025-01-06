@@ -11,6 +11,7 @@ import {
   VoiceAssistantControlBar,
 } from "@livekit/components-react";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 export default function Room() {
   const [urlInput, setUrlInput] = useState("");
@@ -61,7 +62,9 @@ export default function Room() {
         <h3 className="font-semibold text-lg mb-4">Transcriptions:</h3>
         {lastTranscription && (
           <div className="bg-gray-800/50 p-4 rounded-md">
-            <p>{lastTranscription.text}</p>
+            <ReactMarkdown className="prose prose-invert">
+              {lastTranscription.text}
+            </ReactMarkdown>
           </div>
         )}
       </div>

@@ -28,6 +28,7 @@
     "pdf-text-reader": "^5.1.0",
     "react": "^19",
     "react-dom": "^19",
+    "react-markdown": "^9.0.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8"
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.15.0",
+    "@tailwindcss/typography": "^0.5.15",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/node": "^22",
     "@types/react": "^19",

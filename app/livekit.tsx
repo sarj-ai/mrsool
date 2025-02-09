@@ -28,7 +28,18 @@ export default function LiveKit() {
             size="lg"
             onClick={async () => {
               const { token: newToken, room: newRoom } =
-                await getParticipantToken(language);
+                await getParticipantToken(
+                  language,
+                  "+966512343220",
+                  "Saruja Restaurant",
+                  [{
+                    name: "Chicken kebab",
+                    description: "Per gram after Preparation 200 g",
+                  }, {
+                    name: "Eggplant kebab",
+                    description: "Per gram after Preparation 200 g",
+                  }],
+                );
               setToken(newToken);
               setRoom(newRoom);
               setIsWaiting(false);
